@@ -1,0 +1,108 @@
+package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.CheckInRequest;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.CheckOutRequest;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.exceptions.NotFoundException;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffAttendance;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffProfile;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.User;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.WorkingShift;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.StaffAttendanceRepository;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.StaffProfileRepository;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.UserRepository;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.WorkingShiftRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AttendanceService {
+  private final StaffAttendanceRepository staffAttendanceRepository;
+  private final StaffProfileRepository staffProfileRepository;
+  private final WorkingShiftRepository workingShiftRepository;
+  private final FileStorageService fileStorageService;
+  private final UserRepository userRepository;
+
+  public void checkIn(CheckInRequest req, MultipartFile file) {
+    if (staffAttendanceRepository.findByShiftIdAndStaffId(req.getShiftId(), req.getStaffId()).isPresent()) {
+      throw new IllegalStateException("Already checked in for this shift");
+    }
+
+    WorkingShift shift = workingShiftRepository.findById(req.getShiftId())
+        .orElseThrow(() -> new NotFoundException("Shift not found"));
+
+    Outlet outlet = shift.getOutlet();
+
+    String imageUrl = fileStorageService.storeFile(
+        file,
+        LocalDate.now(),
+        outlet.getCode(),
+        shift.getId());
+
+    StaffAttendance attendance = StaffAttendance.builder()
+        .staff(StaffProfile.builder().id(req.getStaffId()).build())
+        .shift(WorkingShift.builder().id(req.getShiftId()).build())
+        .checkinTime(LocalDateTime.now())
+        .checkinLocation(req.getLocation())
+        .checkinImage(imageUrl)
+        .build();
+
+    staffAttendanceRepository.save(attendance);
+  }
+
+  public void checkOut(CheckOutRequest req, MultipartFile file) {
+    StaffAttendance attendance = staffAttendanceRepository
+        .findByShiftIdAndStaffId(req.getShiftId(), req.getStaffId())
+        .orElseThrow(() -> new NotFoundException("You haven't checked in yet"));
+
+    if (attendance.getCheckoutTime() != null) {
+      throw new IllegalStateException("Already checked out");
+    }
+
+    WorkingShift shift = attendance.getShift();
+    Outlet outlet = shift.getOutlet();
+
+    String imageUrl = fileStorageService.storeFile(
+        file,
+        LocalDate.now(),
+        outlet.getCode(),
+        shift.getId());
+
+    attendance.setCheckoutTime(LocalDateTime.now());
+    attendance.setCheckoutImage(imageUrl);
+    attendance.setCheckoutLocation(req.getLocation());
+
+    staffAttendanceRepository.save(attendance);
+  }
+
+  public StaffAttendance getCurrentAttendance(Long staffId, Authentication authentication) {
+    if (staffId == null) {
+      if (authentication == null || !authentication.isAuthenticated()) {
+        throw new IllegalStateException("Unauthorized");
+      }
+
+      String username = authentication.getName();
+      User user = userRepository.findByUsername(username)
+          .orElseThrow(() -> new NotFoundException("User not found"));
+      Optional<StaffProfile> staff = staffProfileRepository.findByAccountId(user.getId());
+      if (staff == null) {
+        throw new IllegalStateException("No staff profile associated with this user");
+      }
+      staffId = staff.get().getId();
+    }
+    StaffAttendance current = staffAttendanceRepository
+        .findTopByStaffIdAndCheckoutTimeIsNullOrderByCheckinTimeDesc(staffId)
+        .orElseThrow(() -> new NotFoundException("No active attendance record found"));
+
+    return current;
+  }
+
+}
