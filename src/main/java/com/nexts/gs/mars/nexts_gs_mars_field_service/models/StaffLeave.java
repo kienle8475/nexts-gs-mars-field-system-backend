@@ -15,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Column;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "staff_leaves")
 @Data
@@ -26,9 +28,9 @@ public class StaffLeave {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  // Mỗi kỳ nghỉ gắn với một bản ghi chấm công
   @ManyToOne
   @JoinColumn(name = "attendance_id", nullable = false)
+  @JsonBackReference("attendance-leave")
   private StaffAttendance attendance;
 
   @Column(name = "leave_type", length = 50)

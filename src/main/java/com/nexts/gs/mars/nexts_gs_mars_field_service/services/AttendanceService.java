@@ -31,13 +31,16 @@ public class AttendanceService {
   private final FileStorageService fileStorageService;
   private final UserRepository userRepository;
 
-  public void checkIn(CheckInRequest req, MultipartFile file) {
+  public StaffAttendance checkIn(CheckInRequest req, MultipartFile file) {
     if (staffAttendanceRepository.findByShiftIdAndStaffId(req.getShiftId(), req.getStaffId()).isPresent()) {
       throw new IllegalStateException("Already checked in for this shift");
     }
 
     WorkingShift shift = workingShiftRepository.findById(req.getShiftId())
         .orElseThrow(() -> new NotFoundException("Shift not found"));
+
+    StaffProfile staff = staffProfileRepository.findById(req.getStaffId())
+        .orElseThrow(() -> new NotFoundException("Staff not found"));
 
     Outlet outlet = shift.getOutlet();
 
@@ -48,14 +51,14 @@ public class AttendanceService {
         shift.getId());
 
     StaffAttendance attendance = StaffAttendance.builder()
-        .staff(StaffProfile.builder().id(req.getStaffId()).build())
-        .shift(WorkingShift.builder().id(req.getShiftId()).build())
+        .staff(staff)
+        .shift(shift)
         .checkinTime(LocalDateTime.now())
         .checkinLocation(req.getLocation())
         .checkinImage(imageUrl)
         .build();
 
-    staffAttendanceRepository.save(attendance);
+    return staffAttendanceRepository.save(attendance);
   }
 
   public void checkOut(CheckOutRequest req, MultipartFile file) {

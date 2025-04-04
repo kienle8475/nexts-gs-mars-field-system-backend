@@ -14,6 +14,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.mapper.OutletMapper;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.OutletRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.utils.PageResponseUtil;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.OutletSimpleOptionReponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,10 @@ public class OutletService {
   public Outlet getOutletById(Long id) {
     return outletRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Outlet not found with id: " + id));
+  }
+
+  public List<OutletSimpleOptionReponse> getOutletOptionByProvinceId(Long provinceId) {
+    return outletRepository.findSimpleByProvince(provinceId);
   }
 
   public Outlet createOutlet(CreateOutletRequest outletRequest) {

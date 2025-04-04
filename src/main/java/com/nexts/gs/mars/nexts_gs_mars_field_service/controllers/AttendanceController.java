@@ -29,12 +29,12 @@ public class AttendanceController {
   public ResponseEntity<ApiResponse<Object>> checkIn(
       @ModelAttribute CheckInRequest request,
       @RequestParam MultipartFile file) {
-    attendanceService.checkIn(request, file);
+    StaffAttendance attendance = attendanceService.checkIn(request, file);
     return ResponseEntity.ok(
         ApiResponse.builder()
             .message("Checked in successfully")
             .status(HttpStatus.OK.value())
-            .data(null)
+            .data(attendance)
             .build());
   }
 
