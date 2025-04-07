@@ -20,7 +20,7 @@ public class UploadController {
 
   @PostMapping("/image")
   public ResponseEntity<ApiResponse<Object>> uploadImage(@RequestParam("file") MultipartFile file) {
-    String path = fileStorageService.storeFile(file);
+    String path = fileStorageService.storeFile(file, "others", false, 0, 0);
     return ResponseEntity.ok(
         ApiResponse.builder()
             .message("Image uploaded successfully")

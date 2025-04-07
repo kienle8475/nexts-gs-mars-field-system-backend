@@ -1,5 +1,7 @@
 package com.nexts.gs.mars.nexts_gs_mars_field_service.controllers;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.CreateOutletRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.ApiResponse;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.OutletSimpleOptionReponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.OutletService;
 
@@ -95,6 +98,19 @@ public class OutletController {
             .message("Outlets fetched successfully")
             .status(HttpStatus.OK.value())
             .data(outletService.getOutletsByProvince(provinceId))
+            .build());
+  }
+
+  @GetMapping("/option-by-province")
+  public ResponseEntity<ApiResponse<Object>> getSimpleOutlets(
+      @RequestParam(required = false) Long provinceId) {
+
+    List<OutletSimpleOptionReponse> result = outletService.getOutletOptionByProvinceId(provinceId);
+    return ResponseEntity.ok(
+        ApiResponse.builder()
+            .message("Outlets fetched successfully")
+            .status(HttpStatus.OK.value())
+            .data(result)
             .build());
   }
 }

@@ -40,6 +40,9 @@ public class StaffProfile {
   @Column(name = "profile_image", columnDefinition = "TEXT")
   private String profileImage;
 
+  @Column(name = "profile_image_report", columnDefinition = "TEXT")
+  private String profileImageReport;
+
   @Column(name = "training_date")
   private LocalDate trainingDate;
 

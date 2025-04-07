@@ -3,6 +3,7 @@ package com.nexts.gs.mars.nexts_gs_mars_field_service.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.OutletBasicDTO;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.CreateOutletRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.OutletResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
@@ -25,4 +26,8 @@ public interface OutletMapper {
   @Mapping(target = "saleSupervisorName", source = "saleSupervisor.fullName")
   @Mapping(target = "keyAccountManagerName", source = "keyAccountManager.fullName")
   OutletResponse toResponse(Outlet outlet);
+
+  @Mapping(target = "province", source = "province.name")
+  OutletBasicDTO toBasicDTO(Outlet outlet);
+
 }

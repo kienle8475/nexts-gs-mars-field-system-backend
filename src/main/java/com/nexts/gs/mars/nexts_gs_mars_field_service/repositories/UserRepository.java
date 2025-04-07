@@ -8,4 +8,6 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.models.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByUsername(String username);
+
+  boolean existsByUsername(String username);
 }

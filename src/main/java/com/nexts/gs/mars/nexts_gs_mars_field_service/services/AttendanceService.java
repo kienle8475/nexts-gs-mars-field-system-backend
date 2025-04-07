@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.CheckInRequest;
@@ -44,11 +45,21 @@ public class AttendanceService {
 
     Outlet outlet = shift.getOutlet();
 
-    String imageUrl = fileStorageService.storeFile(
+    String overlayText = String.join("\n",
+        "Loại: Check In",
+        "Thời gian: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
+        "Nhân viên: " + staff.getFullName(),
+        "Ca: " + shift.getName(),
+        "Địa điểm: " + outlet.getName(),
+        "Vị trí: " + req.getLocation());
+
+    String imageUrl = fileStorageService.storeFileAttendance(
         file,
         LocalDate.now(),
         outlet.getCode(),
-        shift.getId());
+        shift.getId(),
+        "checkin",
+        overlayText);
 
     StaffAttendance attendance = StaffAttendance.builder()
         .staff(staff)
@@ -72,12 +83,21 @@ public class AttendanceService {
 
     WorkingShift shift = attendance.getShift();
     Outlet outlet = shift.getOutlet();
+    String overlayText = String.join("\n",
+        "Loại: Check Out",
+        "Thời gian: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
+        "Nhân viên: " + attendance.getStaff().getFullName(),
+        "Ca: " + shift.getName(),
+        "Địa điểm: " + outlet.getName(),
+        "Vị trí: " + req.getLocation());
 
-    String imageUrl = fileStorageService.storeFile(
+    String imageUrl = fileStorageService.storeFileAttendance(
         file,
         LocalDate.now(),
         outlet.getCode(),
-        shift.getId());
+        shift.getId(),
+        "checkout",
+        overlayText);
 
     attendance.setCheckoutTime(LocalDateTime.now());
     attendance.setCheckoutImage(imageUrl);

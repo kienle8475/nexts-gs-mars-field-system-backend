@@ -1,7 +1,9 @@
 package com.nexts.gs.mars.nexts_gs_mars_field_service.controllers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -14,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -21,10 +24,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.utils.JwtUtil;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.AuthRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.RegisterRequest;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.RegisterStaffRequest;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.ApiResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.AuthResponse;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffProfile;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.User;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.UserRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.security.UserSecurityService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.StaffProfileService;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.StaffProfileRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.SaleProfileRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.enums.Role;
@@ -42,6 +49,7 @@ public class AuthController {
   private final StaffProfileRepository staffProfileRepository;
   private final SaleProfileRepository saleProfileRepository;
   private final UserSecurityService userSecurityService;
+  private final StaffProfileService staffProfileService;
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody AuthRequest request) {
@@ -127,4 +135,15 @@ public class AuthController {
 
     return ResponseEntity.ok(response);
   }
+
+  @PostMapping("/register-staff")
+  public ResponseEntity<ApiResponse<Object>> registerStaff(@ModelAttribute RegisterStaffRequest request,
+      @RequestParam(required = false) MultipartFile[] files) {
+    StaffProfile staffProfile = staffProfileService.registerStaff(request, files);
+    return ResponseEntity.ok(ApiResponse.builder()
+        .message("Staff registered successfully")
+        .data(staffProfile)
+        .build());
+  }
+
 }

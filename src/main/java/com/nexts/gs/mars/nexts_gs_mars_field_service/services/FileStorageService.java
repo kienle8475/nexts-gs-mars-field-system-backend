@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import java.time.LocalDate;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Color;
 import java.awt.Font;
@@ -28,26 +29,43 @@ import lombok.RequiredArgsConstructor;
 public class FileStorageService {
   private final FileStorageProperties fileStorageProperties;
 
-  public String storeFile(MultipartFile file) {
-    String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-    Path targetLocation = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
+  public String storeFile(MultipartFile file, String location, boolean isResize, int width,
+      int height) {
+    String fileName = UUID.randomUUID().toString() + ".jpg";
+    Path targetLocation = Paths.get(fileStorageProperties.getUploadDir(), location).toAbsolutePath().normalize();
     try {
       Files.createDirectories(targetLocation);
       Path filePath = targetLocation.resolve(fileName);
-      Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-      return "/uploads/images/" + fileName;
+
+      if (isResize) {
+        BufferedImage originalImage = ImageIO.read(file.getInputStream());
+        BufferedImage resizedImage = resizeAndCropToFill(originalImage, width, height);
+        ImageIO.write(resizedImage, "jpg", filePath.toFile());
+      } else {
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+      }
+      return "/uploads/images/" + location + "/" + fileName;
     } catch (IOException e) {
       throw new RuntimeException("Could not store file " + fileName + ". Please try again!", e);
     }
   }
 
-  public String storeFile(MultipartFile file, LocalDate date, String outletCode, Long shiftId) {
+  public String storeAvatarImage(MultipartFile file) {
+    return storeFile(file, "avatars", false, 0, 0);
+  }
+
+  public String storeProfileImageReport(MultipartFile file) {
+    return storeFile(file, "profiles", true, 1200, 1600);
+  }
+
+  public String storeFileAttendance(MultipartFile file, LocalDate date, String outletCode, Long shiftId,
+      String actionType, String overlayText) {
     try {
-      String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+      String fileName = actionType + "_" + UUID.randomUUID() + ".jpg";
       Path uploadDir = Paths.get(fileStorageProperties.getUploadDir(),
           date.toString(),
           outletCode,
-          "shift_" + shiftId).toAbsolutePath().normalize();
+          String.format("%05d", shiftId)).toAbsolutePath().normalize();
 
       Files.createDirectories(uploadDir);
       Path targetPath = uploadDir.resolve(fileName);
@@ -56,16 +74,15 @@ public class FileStorageService {
       BufferedImage originalImage = ImageIO.read(file.getInputStream());
 
       // Resize ảnh
-      BufferedImage resizedImage = resizeWithPadding(originalImage, 1200, 1600);
+      BufferedImage resizedImage = resizeAndCropToFill(originalImage, 1200, 1600);
 
       // Ghi chữ lên ảnh
       Graphics2D g = resizedImage.createGraphics();
       g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-      String overlayText = "NEXTS";
       String[] lines = overlayText.split("\\n");
-      int padding = 10;
-      int lineHeight = 28;
+      int padding = 20;
+      int lineHeight = 32;
       int blockHeight = (lineHeight * lines.length) + (padding * 2);
       int blockWidth = resizedImage.getWidth();
 
@@ -77,7 +94,7 @@ public class FileStorageService {
 
       // Ghi từng dòng text
       g.setColor(Color.WHITE);
-      g.setFont(new Font("Arial", Font.PLAIN, 22));
+      g.setFont(new Font("Default", Font.PLAIN, 32));
 
       int yText = yStart + padding + lineHeight - 5;
       for (String line : lines) {
@@ -90,32 +107,33 @@ public class FileStorageService {
       ImageIO.write(resizedImage, "jpg", targetPath.toFile());
 
       // Trả URL tương đối để lưu DB
-      return "/uploads/images/" + date + "/" + outletCode + "/shift_" + shiftId + "/" + fileName;
+      return "/uploads/images/" + date + "/" + outletCode + "/" + String.format("%05d", shiftId) + "/" + fileName;
 
     } catch (IOException e) {
       throw new RuntimeException("Failed to store file", e);
     }
   }
 
-  private BufferedImage resizeWithPadding(BufferedImage originalImage, int targetWidth, int targetHeight) {
+  private BufferedImage resizeAndCropToFill(BufferedImage originalImage, int targetWidth, int targetHeight) {
     int originalWidth = originalImage.getWidth();
     int originalHeight = originalImage.getHeight();
 
-    double scale = Math.min((double) targetWidth / originalWidth, (double) targetHeight / originalHeight);
+    double scale = Math.max((double) targetWidth / originalWidth, (double) targetHeight / originalHeight);
     int scaledWidth = (int) (originalWidth * scale);
     int scaledHeight = (int) (originalHeight * scale);
 
-    BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-    Graphics2D g2d = outputImage.createGraphics();
+    Image scaledImage = originalImage.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+    BufferedImage resizedImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
 
-    g2d.setColor(Color.BLACK);
-    g2d.fillRect(0, 0, targetWidth, targetHeight);
+    Graphics2D g2dResize = resizedImage.createGraphics();
+    g2dResize.drawImage(scaledImage, 0, 0, null);
+    g2dResize.dispose();
 
-    int x = (targetWidth - scaledWidth) / 2;
-    int y = (targetHeight - scaledHeight) / 2;
-    g2d.drawImage(originalImage, x, y, scaledWidth, scaledHeight, null);
-    g2d.dispose();
+    // Crop center
+    int x = (scaledWidth - targetWidth) / 2;
+    int y = (scaledHeight - targetHeight) / 2;
 
-    return outputImage;
+    return resizedImage.getSubimage(x, y, targetWidth, targetHeight);
   }
+
 }
