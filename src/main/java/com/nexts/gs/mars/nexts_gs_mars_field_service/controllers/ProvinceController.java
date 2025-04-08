@@ -16,7 +16,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ProvinceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/provinces")
+@RequestMapping("${api.version}/provinces")
 @RequiredArgsConstructor
 public class ProvinceController {
   private final ProvinceService provinceService;

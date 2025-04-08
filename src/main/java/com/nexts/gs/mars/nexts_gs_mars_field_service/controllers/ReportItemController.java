@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-@RequestMapping("api/report-items")
+@RequestMapping("${api.version}/report-items")
 @RequiredArgsConstructor
 public class ReportItemController {
   private final ReportItemService reportItemService;

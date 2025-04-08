@@ -17,7 +17,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.StaffLeaveService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/staff-leaves")
+@RequestMapping("${api.version}/staff-leaves")
 @RequiredArgsConstructor
 public class StaffLeaveController {
   private final StaffLeaveService staffLeaveService;

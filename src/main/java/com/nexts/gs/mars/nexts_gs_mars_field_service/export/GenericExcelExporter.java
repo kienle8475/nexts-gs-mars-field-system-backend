@@ -18,7 +18,6 @@ public interface GenericExcelExporter {
       List<Map<String, Object>> rows,
       InputStream templateStream,
       Map<String, List<ReportItem>> itemsByBrand,
-      int fixedColumnCount,
       int brandRowIndex,
       int keyRowIndex);
 }

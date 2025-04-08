@@ -196,12 +196,12 @@ public class ReportService {
         endDateTime);
   }
 
+  // Staff Leave Report
   public List<StaffLeave> getStaffLeavesBySaleIdAndDate(Long saleProfileId, LocalDateTime startDateTime,
       LocalDateTime endDateTime) {
     return staffLeaveRepository.findAllBySaleProfileIdAndDateBetween(saleProfileId, startDateTime, endDateTime);
   }
 
-  // Staff Leave Report
   public List<Predicate> buildStaffLeavePredicates(CriteriaBuilder cb, Root<StaffLeave> root, Path<?> staffPath,
       Path<?> outletPath, StaffLeaveCriteriaRequest criteria) {
     List<Predicate> predicates = new ArrayList<>();
@@ -268,7 +268,63 @@ public class ReportService {
     return new PageImpl<>(query.getResultList(), pageable, total);
   }
 
-  // OOS Report
-
   // Sale Report
+  public List<SaleReport> getSaleReportsByCriteria(ReportCriteriaRequest request) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<SaleReport> cq = cb.createQuery(SaleReport.class);
+    Root<SaleReport> root = cq.from(SaleReport.class);
+    Join<SaleReport, StaffAttendance> attendanceJoin = root.join("attendance");
+    Join<StaffAttendance, WorkingShift> shiftJoin = attendanceJoin.join("shift");
+    Join<WorkingShift, Outlet> outletJoin = shiftJoin.join("outlet");
+
+    List<Predicate> predicates = new ArrayList<>();
+
+    if (request.getOutletId() != null) {
+      predicates.add(cb.equal(outletJoin.get("id"), request.getOutletId()));
+    }
+
+    if (request.getProvinceId() != null) {
+      predicates.add(cb.equal(outletJoin.get("province").get("id"), request.getProvinceId()));
+    }
+
+    if (request.hasDate()) {
+      Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, shiftJoin.get("startTime"));
+      predicates.add(cb.equal(shiftDate, request.getDate()));
+    }
+
+    cq.where(cb.and(predicates.toArray(new Predicate[0])));
+    cq.orderBy(cb.asc(shiftJoin.get("startTime")));
+
+    return entityManager.createQuery(cq).getResultList();
+  }
+
+  // OOS Report
+  public List<OosReport> getOosReportsByCriteria(ReportCriteriaRequest request) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<OosReport> cq = cb.createQuery(OosReport.class);
+    Root<OosReport> root = cq.from(OosReport.class);
+    Join<OosReport, StaffAttendance> attendanceJoin = root.join("attendance");
+    Join<StaffAttendance, WorkingShift> shiftJoin = attendanceJoin.join("shift");
+    Join<WorkingShift, Outlet> outletJoin = shiftJoin.join("outlet");
+
+    List<Predicate> predicates = new ArrayList<>();
+
+    if (request.getOutletId() != null) {
+      predicates.add(cb.equal(outletJoin.get("id"), request.getOutletId()));
+    }
+
+    if (request.getProvinceId() != null) {
+      predicates.add(cb.equal(outletJoin.get("province").get("id"), request.getProvinceId()));
+    }
+
+    if (request.hasDate()) {
+      Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, shiftJoin.get("startTime"));
+      predicates.add(cb.equal(shiftDate, request.getDate()));
+    }
+
+    cq.where(cb.and(predicates.toArray(new Predicate[0])));
+    cq.orderBy(cb.asc(shiftJoin.get("startTime")));
+
+    return entityManager.createQuery(cq).getResultList();
+  }
 }

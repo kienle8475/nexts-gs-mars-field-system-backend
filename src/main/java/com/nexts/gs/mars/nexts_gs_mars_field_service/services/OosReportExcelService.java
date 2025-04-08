@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.OosReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.ReportItem;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.models.SaleReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffAttendance;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffProfile;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.WorkingShift;
@@ -26,13 +26,13 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SaleReportExcelService {
+public class OosReportExcelService {
   private final ReportItemRepository reportItemRepository;
   private final GenericExcelExporter genericExcelExporter;
 
-  public ByteArrayInputStream export(List<SaleReport> reports, String templatePath) throws IOException {
+  public ByteArrayInputStream export(List<OosReport> reports, String templatePath) throws IOException {
 
-    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.SALES);
+    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.OOS);
 
     // Step 2: Group items by brand
     Map<String, List<ReportItem>> itemsByBrand = items.stream()
@@ -60,7 +60,7 @@ public class SaleReportExcelService {
     // Step 5: Build data rows
     List<Map<String, Object>> rows = new ArrayList<>();
     int index = 1;
-    for (SaleReport report : reports) {
+    for (OosReport report : reports) {
       Map<String, Object> row = new LinkedHashMap<>();
       StaffAttendance a = report.getAttendance();
       StaffProfile s = a.getStaff();

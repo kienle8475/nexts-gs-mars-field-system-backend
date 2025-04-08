@@ -23,7 +23,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.OutletService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/outlets")
+@RequestMapping("${api.version}/outlets")
 @RequiredArgsConstructor
 public class OutletController {
   private final OutletService outletService;

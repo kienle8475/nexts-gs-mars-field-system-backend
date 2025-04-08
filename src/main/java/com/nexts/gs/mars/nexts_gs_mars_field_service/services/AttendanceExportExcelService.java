@@ -55,7 +55,7 @@ public class AttendanceExportExcelService {
         .toList();
   }
 
-  public ByteArrayInputStream exportAttendance(List<StaffAttendance> attendances, InputStream templateStream) {
+  public ByteArrayInputStream export(List<StaffAttendance> attendances, InputStream templateStream) {
     List<Map<String, Object>> rows = toExportRowMapsAttendance(attendances);
     return genericExcelExporter.exportFromTemplate(rows, templateStream, 1, 2);
   }

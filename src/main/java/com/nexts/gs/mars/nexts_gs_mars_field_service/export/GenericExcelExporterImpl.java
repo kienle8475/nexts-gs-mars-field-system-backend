@@ -9,10 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -82,7 +85,6 @@ public class GenericExcelExporterImpl implements GenericExcelExporter {
       List<Map<String, Object>> rows,
       InputStream templateStream,
       Map<String, List<ReportItem>> itemsByBrand,
-      int fixedColumnCount,
       int brandRowIndex,
       int keyRowIndex) {
     try (Workbook workbook = new XSSFWorkbook(templateStream);
@@ -90,54 +92,78 @@ public class GenericExcelExporterImpl implements GenericExcelExporter {
 
       Sheet sheet = workbook.getSheetAt(0);
 
-      // Build brand header (row 0) and SKU header (row 1)
-      Row brandRow = sheet.createRow(brandRowIndex);
-      Row keyRow = sheet.createRow(keyRowIndex);
+      // Reference existing rows from template
+      Row brandRow = sheet.getRow(brandRowIndex);
+      Row displayRow = sheet.getRow(brandRowIndex + 1);
+      Row keyRow = sheet.getRow(keyRowIndex);
 
-      CellStyle headerStyle = workbook.createCellStyle();
-      Font font = workbook.createFont();
-      font.setBold(true);
-      headerStyle.setFont(font);
-      headerStyle.setAlignment(HorizontalAlignment.CENTER);
-      headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-      headerStyle.setWrapText(true);
+      // Auto detect fixed columns by scanning key row
+      int fixedColumnCount = 0;
+      short lastCell = keyRow.getLastCellNum();
+      for (int i = 0; i < lastCell; i++) {
+        Cell keyCell = keyRow.getCell(i);
+        if (keyCell == null || keyCell.getStringCellValue().isBlank())
+          break;
+        fixedColumnCount++;
+      }
 
-      // Write fixed headers
-      AtomicInteger colIndex = new AtomicInteger(0);
-      rows.stream().findFirst().ifPresent(firstRow -> {
-        for (String key : firstRow.keySet()) {
-          if (colIndex.get() >= fixedColumnCount)
-            break;
-          Cell brandCell = brandRow.createCell(colIndex.get());
-          brandCell.setCellStyle(headerStyle);
-
-          Cell keyCell = keyRow.createCell(colIndex.get());
-          keyCell.setCellValue(key);
-          keyCell.setCellStyle(headerStyle);
-          colIndex.getAndIncrement();
-        }
-      });
-
-      // Write dynamic headers with brand merge
+      // Clone the style from the last fixed column (if available)
+      Cell referenceStyleCell = keyRow.getCell(fixedColumnCount - 1);
+      CellStyle clonedStyle = referenceStyleCell != null ? referenceStyleCell.getCellStyle() : null;
+      if (clonedStyle != null) {
+        clonedStyle.setBorderTop(BorderStyle.THIN);
+        clonedStyle.setBorderBottom(BorderStyle.THIN);
+        clonedStyle.setBorderLeft(BorderStyle.THIN);
+        clonedStyle.setBorderRight(BorderStyle.THIN);
+      }
+      // Write dynamic headers only (after fixed columns)
+      AtomicInteger colIndex = new AtomicInteger(fixedColumnCount);
       for (Map.Entry<String, List<ReportItem>> entry : itemsByBrand.entrySet()) {
         String brand = entry.getKey();
         List<ReportItem> items = entry.getValue();
 
         int startCol = colIndex.get();
         for (ReportItem item : items) {
+          Cell displayCell = displayRow.createCell(colIndex.get());
+          displayCell.setCellValue(item.getName());
+          if (clonedStyle != null)
+            displayCell.setCellStyle(clonedStyle);
+
           Cell keyCell = keyRow.createCell(colIndex.get());
           keyCell.setCellValue(item.getSkuCode());
-          keyCell.setCellStyle(headerStyle);
+          if (clonedStyle != null)
+            keyCell.setCellStyle(clonedStyle);
+
           colIndex.getAndIncrement();
         }
         int endCol = colIndex.get() - 1;
         if (startCol <= endCol) {
           Cell brandCell = brandRow.createCell(startCol);
           brandCell.setCellValue(brand);
-          brandCell.setCellStyle(headerStyle);
-          sheet.addMergedRegion(new CellRangeAddress(
-              brandRowIndex, brandRowIndex, startCol, endCol));
+          if (clonedStyle != null)
+            brandCell.setCellStyle(clonedStyle);
+          if (startCol < endCol) {
+            sheet.addMergedRegion(new CellRangeAddress(
+                brandRowIndex, brandRowIndex, startCol, endCol));
+          }
         }
+      }
+
+      // Build ordered keys from final key row
+      Map<Integer, String> columnKeyMap = new LinkedHashMap<>();
+      for (int i = 0; i < keyRow.getLastCellNum(); i++) {
+        Cell keyCell = keyRow.getCell(i);
+        if (keyCell != null && !keyCell.getStringCellValue().isBlank()) {
+          columnKeyMap.put(i, keyCell.getStringCellValue());
+        }
+      }
+
+      // Get style of last row (for row formatting)
+      int lastHeaderRowIndex = keyRowIndex;
+      Row sampleRow = sheet.getRow(lastHeaderRowIndex);
+      Map<Integer, CellStyle> styleMap = new LinkedHashMap<>();
+      for (Cell cell : sampleRow) {
+        styleMap.put(cell.getColumnIndex(), cell.getCellStyle());
       }
 
       // Write data rows
@@ -146,11 +172,16 @@ public class GenericExcelExporterImpl implements GenericExcelExporter {
         Map<String, Object> rowData = rows.get(i);
         Row row = sheet.createRow(dataStartRow + i);
 
-        int ci = 0;
-        for (String key : rowData.keySet()) {
-          Cell cell = row.createCell(ci++);
+        for (Map.Entry<Integer, String> entry : columnKeyMap.entrySet()) {
+          int col = entry.getKey();
+          String key = entry.getValue();
           Object value = rowData.get(key);
+          Cell cell = row.createCell(col);
           cell.setCellValue(value != null ? value.toString() : "");
+
+          if (styleMap.containsKey(col)) {
+            cell.setCellStyle(styleMap.get(col));
+          }
         }
       }
 

@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/reports")
+@RequestMapping("${api.version}/reports")
 public class ReportController {
 
   private final ReportService reportService;

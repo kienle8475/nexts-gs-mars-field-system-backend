@@ -13,7 +13,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.WorkingShiftServic
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/working-shifts")
+@RequestMapping("${api.version}/working-shifts")
 @RequiredArgsConstructor
 public class WorkingShiftController {
   private final WorkingShiftService workingShiftService;

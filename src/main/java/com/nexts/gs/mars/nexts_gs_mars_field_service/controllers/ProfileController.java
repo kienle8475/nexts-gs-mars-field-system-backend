@@ -15,7 +15,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.StaffProfileServic
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/profiles")
+@RequestMapping("${api.version}/profiles")
 public class ProfileController {
   private final SaleProfileService saleProfileService;
   private final StaffProfileService staffProfileService;

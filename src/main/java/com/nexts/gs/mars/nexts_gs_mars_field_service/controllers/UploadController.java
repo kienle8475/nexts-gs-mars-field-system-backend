@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/upload")
+@RequestMapping("${api.version}/upload")
 public class UploadController {
   private final FileStorageService fileStorageService;
 

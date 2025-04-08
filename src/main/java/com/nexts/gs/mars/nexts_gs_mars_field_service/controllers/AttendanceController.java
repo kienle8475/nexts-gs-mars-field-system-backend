@@ -20,7 +20,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.AttendanceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/attendance")
+@RequestMapping("${api.version}/attendance")
 @RequiredArgsConstructor
 public class AttendanceController {
   private final AttendanceService attendanceService;

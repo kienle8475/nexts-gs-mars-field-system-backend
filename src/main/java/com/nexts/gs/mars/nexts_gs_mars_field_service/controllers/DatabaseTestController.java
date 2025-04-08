@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/test-db")
+@RequestMapping("${api.version}/test-db")
 @RequiredArgsConstructor
 public class DatabaseTestController {
   private final DataSource dataSource;

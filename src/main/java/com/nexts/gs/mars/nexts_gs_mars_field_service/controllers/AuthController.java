@@ -38,7 +38,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.enums.Role;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("${api.version}/auth")
 @RequiredArgsConstructor
 public class AuthController {
 

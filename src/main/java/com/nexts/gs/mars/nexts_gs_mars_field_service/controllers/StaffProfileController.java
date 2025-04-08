@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-@RequestMapping("/api/staff-profiles")
+@RequestMapping("${api.version}/staff-profiles")
 @RequiredArgsConstructor
 public class StaffProfileController {
   private final StaffProfileService staffProfileService;
