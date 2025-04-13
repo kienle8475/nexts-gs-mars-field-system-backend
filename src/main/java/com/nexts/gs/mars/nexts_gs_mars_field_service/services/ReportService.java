@@ -3,6 +3,7 @@ package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -127,6 +128,9 @@ public class ReportService {
     if (request.hasDate()) {
       Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, root.get("startTime"));
       predicates.add(cb.equal(shiftDate, request.getDate()));
+    } else if (request.hasStartDate() && request.hasEndDate()) {
+      predicates.add(cb.between(root.get("startTime"), request.getStartDate().atStartOfDay(),
+          request.getEndDate().atTime(LocalTime.MAX)));
     }
 
     return predicates;
@@ -290,6 +294,10 @@ public class ReportService {
     if (request.hasDate()) {
       Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, shiftJoin.get("startTime"));
       predicates.add(cb.equal(shiftDate, request.getDate()));
+    } else if (request.hasStartDate() && request.hasEndDate()) {
+      LocalDateTime fromDateTime = request.getStartDate().atStartOfDay();
+      LocalDateTime toDateTime = request.getEndDate().atTime(LocalTime.MAX);
+      predicates.add(cb.between(shiftJoin.get("startTime"), fromDateTime, toDateTime));
     }
 
     cq.where(cb.and(predicates.toArray(new Predicate[0])));
@@ -320,6 +328,10 @@ public class ReportService {
     if (request.hasDate()) {
       Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, shiftJoin.get("startTime"));
       predicates.add(cb.equal(shiftDate, request.getDate()));
+    } else if (request.hasStartDate() && request.hasEndDate()) {
+      LocalDateTime fromDateTime = request.getStartDate().atStartOfDay();
+      LocalDateTime toDateTime = request.getEndDate().atTime(LocalTime.MAX);
+      predicates.add(cb.between(shiftJoin.get("startTime"), fromDateTime, toDateTime));
     }
 
     cq.where(cb.and(predicates.toArray(new Predicate[0])));

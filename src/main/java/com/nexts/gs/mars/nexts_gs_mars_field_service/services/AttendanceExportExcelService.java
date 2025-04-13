@@ -13,13 +13,20 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffProfile;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.WorkingShift;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.export.GenericExcelExporter;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @Service
 @RequiredArgsConstructor
 public class AttendanceExportExcelService {
+
+  @Value("${url.image.base}")
+  @Setter
+  private String urlImageBase;
   private final GenericExcelExporter genericExcelExporter;
 
   public List<Map<String, Object>> toExportRowMapsAttendance(List<StaffAttendance> attendances) {
@@ -32,15 +39,15 @@ public class AttendanceExportExcelService {
 
           Map<String, Object> row = new LinkedHashMap<>();
           row.put("index", i + 1);
-          row.put("profileImage", s.getProfileImage() != null ? s.getProfileImage() : "");
+          row.put("profileImage", s.getProfileImage() != null ? urlImageBase + s.getProfileImage() : "");
           row.put("date", shift.getStartTime() != null ? shift.getStartTime().toLocalDate() : null);
           row.put("shiftName", shift.getName());
           row.put("shiftStart", shift.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
           row.put("shiftEnd", shift.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
           row.put("outletName", o.getName());
           row.put("outletAddress", o.getAddress());
-          row.put("checkinImage", a.getCheckinImage() != null ? a.getCheckinImage() : "");
-          row.put("checkoutImage", a.getCheckoutImage() != null ? a.getCheckoutImage() : "");
+          row.put("checkinImage", a.getCheckinImage() != null ? urlImageBase + a.getCheckinImage() : "");
+          row.put("checkoutImage", a.getCheckoutImage() != null ? urlImageBase + a.getCheckoutImage() : "");
           row.put("checkinTime",
               a.getCheckinTime() != null ? a.getCheckinTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "");
           row.put("checkoutTime",

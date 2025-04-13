@@ -22,6 +22,11 @@ public class ReportItemService {
   private final ReportItemMapper mapper;
 
   public ReportItemResponse create(ReportItemRequest request) {
+
+    if (reportItemRepository.findBySkuCode(request.getSkuCode()).isPresent()) {
+      throw new RuntimeException("Report Item already exists");
+    }
+
     ReportItem item = ReportItem.builder()
         .name(request.getName())
         .skuCode(request.getSkuCode())
@@ -48,5 +53,31 @@ public class ReportItemService {
     return reportItemRepository.findByReportType(reportType).stream()
         .map(mapper::toResponse)
         .toList();
+  }
+
+  public List<ReportItemResponse> getAll() {
+    return reportItemRepository.findAll().stream()
+        .map(mapper::toResponse)
+        .toList();
+  }
+
+  public ReportItemResponse update(String id, ReportItemRequest request) {
+    ReportItem item = reportItemRepository.findById(Long.parseLong(id))
+        .orElseThrow(() -> new RuntimeException("Report Item not found"));
+
+    if (reportItemRepository.findBySkuCode(request.getSkuCode()).isPresent()) {
+      throw new RuntimeException("Report Item already exists");
+    }
+
+    item.setSkuCode(request.getSkuCode());
+    item.setName(request.getName());
+    item.setUnit(request.getUnit());
+    item.setDescription(request.getDescription());
+    item.setCategory(request.getCategory());
+    item.setBrand(request.getBrand());
+
+    ReportItem saved = reportItemRepository.save(item);
+
+    return mapper.toResponse(saved);
   }
 }

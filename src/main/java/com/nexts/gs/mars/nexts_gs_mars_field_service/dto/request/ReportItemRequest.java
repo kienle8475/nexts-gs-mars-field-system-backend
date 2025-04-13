@@ -9,5 +9,7 @@ public class ReportItemRequest {
   private String skuCode;
   private String unit;
   private String description;
+  private String category;
+  private String brand;
   private List<String> reportTypes;
 }

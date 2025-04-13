@@ -11,7 +11,17 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.WorkingShiftRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
+
+import jakarta.persistence.criteria.Predicate;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.StaffAttendanceRepository;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.WorkingshiftUpdateRequest;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.WorkshiftCriteriaRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.WorkShiftGroupResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.WorkShiftResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.mapper.WorkingShiftMapper;
@@ -27,6 +37,7 @@ public class WorkingShiftService {
   private final WorkingShiftRepository workingShiftRepository;
   private final WorkingShiftMapper workingShiftMapper;
   private final StaffAttendanceRepository staffAttendanceRepository;
+  private final EntityManager entityManager;
 
   public WorkShiftGroupResponse getShiftsByOutletAndStaffStatus(Long outletId, Long staffId) {
     LocalDate today = LocalDate.now();
@@ -73,5 +84,51 @@ public class WorkingShiftService {
     LocalDateTime startOfDay = today.atStartOfDay();
     LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
     return workingShiftRepository.findByOutletIdAndStartTimeBetween(outletId, startOfDay, endOfDay);
+  }
+
+  private List<Predicate> buildWorkingShiftPredicates(Root<WorkingShift> root, CriteriaBuilder cb,
+      WorkshiftCriteriaRequest request) {
+    List<Predicate> predicates = new ArrayList<>();
+    if (request.getOutletId() != null) {
+      predicates.add(cb.equal(root.get("outlet").get("id"), request.getOutletId()));
+    }
+
+    if (request.getProvinceId() != null) {
+      predicates.add(cb.equal(root.get("outlet").get("province").get("id"), request.getProvinceId()));
+    }
+
+    if (request.hasDate()) {
+      Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, root.get("startTime"));
+      predicates.add(cb.equal(shiftDate, request.getDate()));
+    }
+    return predicates;
+  }
+
+  public List<WorkShiftResponse> getWorkingShiftsByCriteria(WorkshiftCriteriaRequest request) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<WorkingShift> cq = cb.createQuery(WorkingShift.class);
+    Root<WorkingShift> root = cq.from(WorkingShift.class);
+
+    List<Predicate> predicates = buildWorkingShiftPredicates(root, cb, request);
+    cq.where(predicates.toArray(new Predicate[0]));
+    cq.orderBy(cb.asc(root.get("startTime")));
+
+    List<WorkingShift> shifts = entityManager.createQuery(cq).getResultList();
+    List<WorkShiftResponse> responses = new ArrayList<>();
+    for (WorkingShift shift : shifts) {
+      WorkShiftResponse response = workingShiftMapper.toResponse(shift);
+      response.setCheckedIn(shift.getStaffAttendances().size() > 0);
+      response.setTotalCheckedIn(shift.getStaffAttendances().size());
+      responses.add(response);
+    }
+    return responses;
+  }
+
+  public WorkingShift updateWorkingShift(Long id, WorkingshiftUpdateRequest request) {
+    WorkingShift shift = workingShiftRepository.findById(id).orElseThrow(() -> new RuntimeException("Shift not found"));
+    shift.setName(request.getName());
+    shift.setStartTime(request.getStartTime());
+    shift.setEndTime(request.getEndTime());
+    return workingShiftRepository.save(shift);
   }
 }

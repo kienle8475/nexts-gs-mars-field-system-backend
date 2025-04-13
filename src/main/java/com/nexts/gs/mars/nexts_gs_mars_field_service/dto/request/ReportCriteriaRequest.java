@@ -19,8 +19,21 @@ public class ReportCriteriaRequest {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private LocalDate date;
 
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private LocalDate startDate;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private LocalDate endDate;
+
   public boolean hasDate() {
     return date != null;
   }
 
+  public boolean hasStartDate() {
+    return startDate != null;
+  }
+
+  public boolean hasEndDate() {
+    return endDate != null;
+  }
 }

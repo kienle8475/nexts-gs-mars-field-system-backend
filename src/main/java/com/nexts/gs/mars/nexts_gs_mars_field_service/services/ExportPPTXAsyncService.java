@@ -3,7 +3,6 @@ package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -77,7 +76,7 @@ public class ExportPPTXAsyncService {
             case "outlet" -> setText(shape, a.getShift().getOutlet().getName());
             case "checkinTime" -> setText(shape, a.getCheckinTime() != null ? formatTime(a.getCheckinTime()) : "-");
             case "checkoutTime" -> setText(shape, a.getCheckoutTime() != null ? formatTime(a.getCheckoutTime()) : "-");
-            case "profileImage" -> insertImage(slide, shape, a.getStaff().getProfileImage(), ppt);
+            case "profileImage" -> insertImage(slide, shape, a.getStaff().getProfileImageReport(), ppt);
             case "checkinImage" -> insertImage(slide, shape, a.getCheckinImage(), ppt);
             case "checkoutImage" -> insertImage(slide, shape, a.getCheckoutImage(), ppt);
           }
