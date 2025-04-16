@@ -26,6 +26,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.ReportCriteriaR
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.ExportJob;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.OosReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.SaleReport;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.SamplingReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffAttendance;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ExportJobService;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ExportPPTXAsyncService;
@@ -33,6 +34,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.services.AttendanceExportEx
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.SaleReportExcelService;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ReportService;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.OosReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.SamplingReportExcelService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,6 +47,7 @@ public class ExportController {
   private final SaleReportExcelService saleReportExcelService;
   private final OosReportExcelService oosReportExcelService;
   private final ReportService reportService;
+  private final SamplingReportExcelService samplingReportExcelService;
 
   @GetMapping("/generate-pptx")
   public ResponseEntity<Map<String, Object>> startExportPPTX(@ModelAttribute ReportCriteriaRequest request)
@@ -121,6 +124,22 @@ public class ExportController {
     String templatePath = "templates/oos_report_template.xlsx";
     ByteArrayInputStream stream = oosReportExcelService.export(reports, templatePath);
     String filename = "BAO CAO OOS - "
+        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy_HHmmss"))
+        + ".xlsx";
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Disposition")
+        .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .body(new InputStreamResource(stream));
+  }
+
+  @GetMapping("/sampling")
+  public ResponseEntity<InputStreamResource> exportSamplingReport(
+      @ModelAttribute ReportCriteriaRequest request) throws Exception {
+    List<SamplingReport> reports = reportService.getSamplingReportsByCriteria(request);
+    String templatePath = "templates/sampling_report_template.xlsx";
+    ByteArrayInputStream stream = samplingReportExcelService.export(reports, templatePath);
+    String filename = "BAO CAO SAMPLING - "
         + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy_HHmmss"))
         + ".xlsx";
     return ResponseEntity.ok()

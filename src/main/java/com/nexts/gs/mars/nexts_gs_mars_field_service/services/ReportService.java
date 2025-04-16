@@ -3,7 +3,6 @@ package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -312,6 +311,40 @@ public class ReportService {
     CriteriaQuery<OosReport> cq = cb.createQuery(OosReport.class);
     Root<OosReport> root = cq.from(OosReport.class);
     Join<OosReport, StaffAttendance> attendanceJoin = root.join("attendance");
+    Join<StaffAttendance, WorkingShift> shiftJoin = attendanceJoin.join("shift");
+    Join<WorkingShift, Outlet> outletJoin = shiftJoin.join("outlet");
+
+    List<Predicate> predicates = new ArrayList<>();
+
+    if (request.getOutletId() != null) {
+      predicates.add(cb.equal(outletJoin.get("id"), request.getOutletId()));
+    }
+
+    if (request.getProvinceId() != null) {
+      predicates.add(cb.equal(outletJoin.get("province").get("id"), request.getProvinceId()));
+    }
+
+    if (request.hasDate()) {
+      Expression<LocalDate> shiftDate = cb.function("DATE", LocalDate.class, shiftJoin.get("startTime"));
+      predicates.add(cb.equal(shiftDate, request.getDate()));
+    } else if (request.hasStartDate() && request.hasEndDate()) {
+      LocalDateTime fromDateTime = request.getStartDate().atStartOfDay();
+      LocalDateTime toDateTime = request.getEndDate().atTime(LocalTime.MAX);
+      predicates.add(cb.between(shiftJoin.get("startTime"), fromDateTime, toDateTime));
+    }
+
+    cq.where(cb.and(predicates.toArray(new Predicate[0])));
+    cq.orderBy(cb.asc(shiftJoin.get("startTime")));
+
+    return entityManager.createQuery(cq).getResultList();
+  }
+
+  // Sampling Report
+  public List<SamplingReport> getSamplingReportsByCriteria(ReportCriteriaRequest request) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<SamplingReport> cq = cb.createQuery(SamplingReport.class);
+    Root<SamplingReport> root = cq.from(SamplingReport.class);
+    Join<SamplingReport, StaffAttendance> attendanceJoin = root.join("attendance");
     Join<StaffAttendance, WorkingShift> shiftJoin = attendanceJoin.join("shift");
     Join<WorkingShift, Outlet> outletJoin = shiftJoin.join("outlet");
 
