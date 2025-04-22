@@ -82,8 +82,8 @@ public class StaffProfileService {
     String profileImageUrl = profile.getProfileImage();
     String profileImageReportUrl = profile.getProfileImageReport();
     if (files != null && files.length > 0) {
-      profileImageUrl = fileStorageService.storeAvatarImage(files[0]);
-      profileImageReportUrl = fileStorageService.storeProfileImageReport(files[1]);
+      profileImageUrl = fileStorageService.storeAvatarImage(files[1]);
+      profileImageReportUrl = fileStorageService.storeProfileImageReport(files[0]);
     }
 
     if (request.getPassword() != null || request.getPassword().length() > 0) {

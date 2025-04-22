@@ -128,4 +128,10 @@ public class AttendanceService {
     return current;
   }
 
+  public void deleteAttendance(Long id) {
+    StaffAttendance attendance = staffAttendanceRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Attendance not found"));
+
+    staffAttendanceRepository.delete(attendance);
+  }
 }
