@@ -45,16 +45,6 @@ public class WorkingShiftController {
             .build());
   }
 
-  @GetMapping()
-  public ResponseEntity<ApiResponse<Object>> getWorkingShiftsByCriteria(@RequestBody WorkshiftCriteriaRequest request) {
-    return ResponseEntity.ok(
-        ApiResponse.builder()
-            .message("Shifts fetched successfully")
-            .status(HttpStatus.OK.value())
-            .data(workingShiftService.getWorkingShiftsByCriteria(request))
-            .build());
-  }
-
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<Object>> updateWorkingShift(@PathVariable Long id,
       @ModelAttribute @Valid WorkingshiftUpdateRequest request) {
@@ -70,6 +60,16 @@ public class WorkingShiftController {
             .message("Working shift updated successfully")
             .status(HttpStatus.OK.value())
             .data(workingShiftService.updateWorkingShift(id, request))
+            .build());
+  }
+
+  @GetMapping()
+  public ResponseEntity<ApiResponse<Object>> getWorkingShiftsByCriteria(@RequestBody WorkshiftCriteriaRequest request) {
+    return ResponseEntity.ok(
+        ApiResponse.builder()
+            .message("Shifts fetched successfully")
+            .status(HttpStatus.OK.value())
+            .data(workingShiftService.getWorkingShiftsByCriteria(request))
             .build());
   }
 }

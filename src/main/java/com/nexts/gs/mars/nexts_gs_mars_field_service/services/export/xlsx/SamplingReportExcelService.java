@@ -1,10 +1,11 @@
-package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
+package com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,9 @@ public class SamplingReportExcelService {
 
   public ByteArrayInputStream export(List<SamplingReport> reports, String templatePath) throws IOException {
 
-    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.SAMPLING);
+    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.SAMPLING).stream()
+        .sorted(Comparator.comparingInt(ReportItem::getOrder))
+        .collect(Collectors.toList());
 
     // Step 2: Group items by brand
     Map<String, List<ReportItem>> itemsByBrand = items.stream()

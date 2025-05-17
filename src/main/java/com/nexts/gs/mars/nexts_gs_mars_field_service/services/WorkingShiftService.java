@@ -111,7 +111,7 @@ public class WorkingShiftService {
 
     List<Predicate> predicates = buildWorkingShiftPredicates(root, cb, request);
     cq.where(predicates.toArray(new Predicate[0]));
-    cq.orderBy(cb.asc(root.get("startTime")));
+    cq.orderBy(cb.asc(root.get("outlet").get("name")));
 
     List<WorkingShift> shifts = entityManager.createQuery(cq).getResultList();
     List<WorkShiftResponse> responses = new ArrayList<>();

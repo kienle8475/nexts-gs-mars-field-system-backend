@@ -28,14 +28,20 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.models.OosReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.SaleReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.SamplingReport;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffAttendance;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffLeave;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ExportJobService;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ExportPPTXAsyncService;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.services.AttendanceExportExcelService;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.services.SaleReportExcelService;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.services.ReportService;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.services.OosReportExcelService;
-import com.nexts.gs.mars.nexts_gs_mars_field_service.services.SamplingReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.pptx.ExportPPTXAsyncService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx.AttendanceReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx.OosReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx.SaleReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx.SamplingReportExcelService;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx.StaffLeaveExcelService;
+
 import lombok.RequiredArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,17 +49,20 @@ import lombok.RequiredArgsConstructor;
 public class ExportController {
   private final ExportJobService jobService;
   private final ExportPPTXAsyncService asyncService;
-  private final AttendanceExportExcelService attendanceExportExcelService;
+  private final AttendanceReportExcelService attendanceExportExcelService;
   private final SaleReportExcelService saleReportExcelService;
   private final OosReportExcelService oosReportExcelService;
   private final ReportService reportService;
   private final SamplingReportExcelService samplingReportExcelService;
+  private final StaffLeaveExcelService staffLeaveExcelService;
 
   @GetMapping("/generate-pptx")
   public ResponseEntity<Map<String, Object>> startExportPPTX(@ModelAttribute ReportCriteriaRequest request)
       throws IOException {
     ExportJob job = jobService.createJob();
     List<StaffAttendance> attendances = reportService.getAttendanceByCriteria(request);
+    attendances = new ArrayList<>(attendances);
+    attendances.sort(Comparator.comparing(a -> a.getStaff().getId()));
     InputStream template = getClass().getResourceAsStream("/templates/staff_attendance_template.pptx");
     asyncService.exportAttendancePPTX(job.getId(), attendances, template);
     return ResponseEntity.ok(Map.of("jobId", job.getId()));
@@ -140,6 +149,22 @@ public class ExportController {
     String templatePath = "templates/sampling_report_template.xlsx";
     ByteArrayInputStream stream = samplingReportExcelService.export(reports, templatePath);
     String filename = "BAO CAO SAMPLING - "
+        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy_HHmmss"))
+        + ".xlsx";
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+        .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Disposition")
+        .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .body(new InputStreamResource(stream));
+  }
+
+  @GetMapping("/staff-leave")
+  public ResponseEntity<InputStreamResource> exportStaffLeave(
+      @ModelAttribute ReportCriteriaRequest request) throws Exception {
+    List<StaffLeave> leaves = reportService.getStaffLeavesByCriteria(request);
+    InputStream template = getClass().getResourceAsStream("/templates/staff_leave_template.xlsx");
+    ByteArrayInputStream stream = staffLeaveExcelService.export(leaves, template);
+    String filename = "BAO CAO ROI VI TRI - "
         + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy_HHmmss"))
         + ".xlsx";
     return ResponseEntity.ok()

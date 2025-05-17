@@ -1,4 +1,4 @@
-package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
+package com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -22,7 +22,7 @@ import lombok.Setter;
 
 @Service
 @RequiredArgsConstructor
-public class AttendanceExportExcelService {
+public class AttendanceReportExcelService {
 
   @Value("${url.image.base}")
   @Setter

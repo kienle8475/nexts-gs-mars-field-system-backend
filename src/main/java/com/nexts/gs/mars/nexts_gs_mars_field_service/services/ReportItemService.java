@@ -13,6 +13,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.enums.ReportType;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.ReportItem;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.ReportItemUsage;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -51,6 +52,7 @@ public class ReportItemService {
   public List<ReportItemResponse> getByReportType(String type) {
     ReportType reportType = ReportType.valueOf(type.toUpperCase());
     return reportItemRepository.findByReportType(reportType).stream()
+        .sorted(Comparator.comparing(ReportItem::getOrder))
         .map(mapper::toResponse)
         .toList();
   }

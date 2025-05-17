@@ -41,6 +41,8 @@ public class ReportItem {
 
   private String brand;
 
+  private Integer order;
+
   @Builder.Default
   @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ReportItemUsage> usages = new ArrayList<>();

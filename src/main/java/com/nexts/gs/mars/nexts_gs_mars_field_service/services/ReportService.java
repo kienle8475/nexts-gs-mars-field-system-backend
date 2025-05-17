@@ -145,7 +145,7 @@ public class ReportService {
     List<Predicate> predicates = buildReportAttendancePredicates(root, cb, request);
 
     cq.where(predicates.toArray(new Predicate[0]));
-    cq.orderBy(cb.asc(root.get("startTime")));
+    cq.orderBy(cb.asc(root.get("outlet").get("name")));
 
     TypedQuery<WorkingShift> query = entityManager.createQuery(cq);
     query.setFirstResult((int) pageable.getOffset());
@@ -372,4 +372,24 @@ public class ReportService {
 
     return entityManager.createQuery(cq).getResultList();
   }
+
+  public List<StaffLeave> getStaffLeavesByCriteria(ReportCriteriaRequest request) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<StaffLeave> cq = cb.createQuery(StaffLeave.class);
+    Root<StaffLeave> root = cq.from(StaffLeave.class);
+
+    List<Predicate> predicates = new ArrayList<>();
+
+    if (request.hasDate()) {
+      LocalDateTime startOfDay = request.getDate().atStartOfDay();
+      LocalDateTime endOfDay = request.getDate().atTime(LocalTime.MAX);
+      predicates.add(cb.between(root.get("startTime"), startOfDay, endOfDay));
+    }
+
+    cq.where(cb.and(predicates.toArray(new Predicate[0])));
+    cq.orderBy(cb.asc(root.get("startTime")));
+
+    return entityManager.createQuery(cq).getResultList();
+  }
+
 }

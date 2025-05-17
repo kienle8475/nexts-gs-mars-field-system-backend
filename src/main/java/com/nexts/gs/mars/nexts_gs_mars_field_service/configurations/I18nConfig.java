@@ -24,7 +24,7 @@ public class I18nConfig {
   @Bean
   public LocaleResolver localeResolver() {
     SessionLocaleResolver resolver = new SessionLocaleResolver();
-    resolver.setDefaultLocale(Locale.of("en"));
+    resolver.setDefaultLocale(Locale.of("vi"));
     return resolver;
   }
 

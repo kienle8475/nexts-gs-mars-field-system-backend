@@ -1,4 +1,4 @@
-package com.nexts.gs.mars.nexts_gs_mars_field_service.services;
+package com.nexts.gs.mars.nexts_gs_mars_field_service.services.export.xlsx;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,6 +23,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.ReportItemRepo
 import com.nexts.gs.mars.nexts_gs_mars_field_service.export.GenericExcelExporter;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.enums.ReportType;
 import lombok.RequiredArgsConstructor;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,9 @@ public class OosReportExcelService {
 
   public ByteArrayInputStream export(List<OosReport> reports, String templatePath) throws IOException {
 
-    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.OOS);
+    List<ReportItem> items = reportItemRepository.findByReportType(ReportType.OOS).stream()
+        .sorted(Comparator.comparingInt(ReportItem::getOrder))
+        .collect(Collectors.toList());
 
     // Step 2: Group items by brand
     Map<String, List<ReportItem>> itemsByBrand = items.stream()

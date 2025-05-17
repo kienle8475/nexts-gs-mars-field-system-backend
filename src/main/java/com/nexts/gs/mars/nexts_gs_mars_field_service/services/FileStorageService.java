@@ -12,7 +12,6 @@ import javax.imageio.ImageIO;
 import java.time.LocalDate;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Color;
 import java.awt.Font;
@@ -114,25 +113,40 @@ public class FileStorageService {
     }
   }
 
-  private BufferedImage resizeAndCropToFill(BufferedImage originalImage, int targetWidth, int targetHeight) {
+  public BufferedImage resizeAndCropToFill(BufferedImage originalImage, int targetWidth, int targetHeight) {
+    if (originalImage == null) {
+      throw new IllegalArgumentException("Original image is null.");
+    }
+
     int originalWidth = originalImage.getWidth();
     int originalHeight = originalImage.getHeight();
 
+    if (originalWidth <= 0 || originalHeight <= 0) {
+      throw new IllegalArgumentException("Original image has invalid dimensions.");
+    }
+
+    if (targetWidth <= 0 || targetHeight <= 0) {
+      throw new IllegalArgumentException("Target dimensions must be positive.");
+    }
+
     double scale = Math.max((double) targetWidth / originalWidth, (double) targetHeight / originalHeight);
-    int scaledWidth = (int) (originalWidth * scale);
-    int scaledHeight = (int) (originalHeight * scale);
+    int scaledWidth = (int) Math.ceil(originalWidth * scale);
+    int scaledHeight = (int) Math.ceil(originalHeight * scale);
 
-    Image scaledImage = originalImage.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
-    BufferedImage resizedImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
+    int imageType = originalImage.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+    BufferedImage resizedImage = new BufferedImage(scaledWidth, scaledHeight, imageType);
 
-    Graphics2D g2dResize = resizedImage.createGraphics();
-    g2dResize.drawImage(scaledImage, 0, 0, null);
-    g2dResize.dispose();
+    Graphics2D g2d = resizedImage.createGraphics();
+    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+    g2d.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
+    g2d.dispose();
 
-    // Crop center
-    int x = (scaledWidth - targetWidth) / 2;
-    int y = (scaledHeight - targetHeight) / 2;
+    int x = Math.max((scaledWidth - targetWidth) / 2, 0);
+    int y = Math.max((scaledHeight - targetHeight) / 2, 0);
 
+    if (x + targetWidth > resizedImage.getWidth() || y + targetHeight > resizedImage.getHeight()) {
+      throw new IllegalArgumentException("Crop area is out of image bounds.");
+    }
     return resizedImage.getSubimage(x, y, targetWidth, targetHeight);
   }
 
