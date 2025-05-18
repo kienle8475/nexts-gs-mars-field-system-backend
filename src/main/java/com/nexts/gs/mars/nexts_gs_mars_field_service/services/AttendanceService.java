@@ -28,17 +28,22 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceService {
   private final StaffAttendanceRepository staffAttendanceRepository;
   private final StaffProfileRepository staffProfileRepository;
-  private final WorkingShiftRepository workingShiftRepository;
+  private final WorkingShiftService workingShiftService;
   private final FileStorageService fileStorageService;
+  private final WorkingShiftRepository workingShiftRepository;
   private final UserRepository userRepository;
 
   public StaffAttendance checkIn(CheckInRequest req, MultipartFile file) {
-    if (staffAttendanceRepository.findByShiftIdAndStaffId(req.getShiftId(), req.getStaffId()).isPresent()) {
-      throw new IllegalStateException("Already checked in for this shift");
-    }
+    // if (staffAttendanceRepository.findByShiftIdAndStaffId(req.getShiftId(),
+    // req.getStaffId()).isPresent()) {
+    // throw new IllegalStateException("Already checked in for this shift");
+    // }
 
-    WorkingShift shift = workingShiftRepository.findById(req.getShiftId())
-        .orElseThrow(() -> new NotFoundException("Shift not found"));
+    // WorkingShift shift = workingShiftRepository.findById(req.getShiftId())
+    // .orElseThrow(() -> new NotFoundException("Shift not found"));
+
+    WorkingShift shift = workingShiftService.generateWorkingShifts(req.getOutletId()).get(0);
+    workingShiftRepository.save(shift);
 
     StaffProfile staff = staffProfileRepository.findById(req.getStaffId())
         .orElseThrow(() -> new NotFoundException("Staff not found"));

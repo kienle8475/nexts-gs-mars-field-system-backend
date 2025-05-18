@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 public class CheckInRequest {
   private Long staffId;
-  private Long shiftId;
+  private Long outletId;
   private GeoLocation location;
 }

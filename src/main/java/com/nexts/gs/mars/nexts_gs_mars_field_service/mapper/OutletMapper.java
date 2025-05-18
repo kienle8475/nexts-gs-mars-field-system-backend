@@ -11,7 +11,7 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 @Mapper(componentModel = "spring")
 public interface OutletMapper {
   // map DTO → Entity
-  @Mapping(target = "province.id", source = "provinceId")
+  @Mapping(target = "administrativeUnit.id", source = "adminUnitId")
   @Mapping(target = "saleRep.id", source = "saleRepId")
   @Mapping(target = "saleSupervisor.id", source = "saleSupervisorId")
   @Mapping(target = "keyAccountManager.id", source = "keyAccountManagerId")
@@ -21,13 +21,13 @@ public interface OutletMapper {
   Outlet toEntity(CreateOutletRequest dto);
 
   // map Entity → Response
-  @Mapping(target = "provinceName", source = "province.name")
+  @Mapping(target = "provinceName", source = "administrativeUnit.name")
   @Mapping(target = "saleRepName", source = "saleRep.fullName")
   @Mapping(target = "saleSupervisorName", source = "saleSupervisor.fullName")
   @Mapping(target = "keyAccountManagerName", source = "keyAccountManager.fullName")
   OutletResponse toResponse(Outlet outlet);
 
-  @Mapping(target = "province", source = "province.name")
+  @Mapping(target = "province", source = "administrativeUnit.name")
   OutletBasicDTO toBasicDTO(Outlet outlet);
 
 }

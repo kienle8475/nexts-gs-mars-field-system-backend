@@ -71,7 +71,7 @@ public class SaleReportExcelService {
       Outlet o = shift.getOutlet();
 
       row.put("index", index++);
-      row.put("province", o.getProvince() != null ? o.getProvince().getName() : "");
+      row.put("province", o.getAdministrativeUnit() != null ? o.getAdministrativeUnit().getName() : "");
       row.put("outlet", o.getName());
       row.put("ss", o.getSaleSupervisor() != null ? o.getSaleSupervisor().getFullName() : "");
       row.put("sr", o.getSaleRep() != null ? o.getSaleRep().getFullName() : "");

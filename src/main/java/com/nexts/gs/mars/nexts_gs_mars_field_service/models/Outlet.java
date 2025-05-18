@@ -1,6 +1,7 @@
 package com.nexts.gs.mars.nexts_gs_mars_field_service.models;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,8 +13,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Column;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "outlets")
@@ -21,6 +29,7 @@ import jakarta.persistence.JoinColumn;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Outlet {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +41,9 @@ public class Outlet {
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
-  @ManyToOne
-  @JoinColumn(name = "province_id")
-  private Province province;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "admin_unit_id")
+  private AdministrativeUnit administrativeUnit;
 
   @Column(name = "address", columnDefinition = "TEXT")
   private String address;
@@ -66,4 +75,10 @@ public class Outlet {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  @OneToMany(mappedBy = "outlet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<OutletKpi> kpis = new ArrayList<>();
+
+  @OneToOne(mappedBy = "outlet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private OutletWorkingTime workingTime;
 }

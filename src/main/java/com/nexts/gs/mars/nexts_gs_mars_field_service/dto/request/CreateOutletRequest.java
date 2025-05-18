@@ -11,7 +11,7 @@ public class CreateOutletRequest {
   private Double longitude;
   private Integer checkinRadiusMeters;
 
-  private Long provinceId;
+  private Long adminUnitId;
   private Long saleRepId;
   private Long saleSupervisorId;
   private Long keyAccountManagerId;

@@ -91,21 +91,21 @@ public class OutletController {
             .build());
   }
 
-  @GetMapping("/by-province/{provinceId}")
-  public ResponseEntity<ApiResponse<Object>> getByProvince(@PathVariable Long provinceId) {
+  @GetMapping("/by-administrative-unit/{administrativeUnitId}")
+  public ResponseEntity<ApiResponse<Object>> getByAdministrativeUnit(@PathVariable Long administrativeUnitId) {
     return ResponseEntity.ok(
         ApiResponse.builder()
             .message("Outlets fetched successfully")
             .status(HttpStatus.OK.value())
-            .data(outletService.getOutletsByProvince(provinceId))
+            .data(outletService.getOutletsByAdministrativeUnit(administrativeUnitId))
             .build());
   }
 
-  @GetMapping("/option-by-province")
+  @GetMapping("/option-by-administrative-unit")
   public ResponseEntity<ApiResponse<Object>> getSimpleOutlets(
-      @RequestParam(required = false) Long provinceId) {
+      @RequestParam(required = false) Long administrativeUnitId) {
 
-    List<OutletSimpleOptionReponse> result = outletService.getOutletOptionByProvinceId(provinceId);
+    List<OutletSimpleOptionReponse> result = outletService.getOutletOptionByAdministrativeUnitId(administrativeUnitId);
     return ResponseEntity.ok(
         ApiResponse.builder()
             .message("Outlets fetched successfully")

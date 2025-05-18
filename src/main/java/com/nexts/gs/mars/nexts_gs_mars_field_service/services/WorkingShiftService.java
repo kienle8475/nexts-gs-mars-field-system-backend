@@ -19,12 +19,16 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
 import jakarta.persistence.criteria.Predicate;
+
+import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.OutletRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.repositories.StaffAttendanceRepository;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.WorkingshiftUpdateRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.request.WorkshiftCriteriaRequest;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.WorkShiftGroupResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.WorkShiftResponse;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.mapper.WorkingShiftMapper;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
+import com.nexts.gs.mars.nexts_gs_mars_field_service.models.OutletWorkingTime;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.StaffAttendance;
 import com.nexts.gs.mars.nexts_gs_mars_field_service.models.WorkingShift;
 
@@ -38,6 +42,7 @@ public class WorkingShiftService {
   private final WorkingShiftMapper workingShiftMapper;
   private final StaffAttendanceRepository staffAttendanceRepository;
   private final EntityManager entityManager;
+  private final OutletRepository outletRepository;
 
   public WorkShiftGroupResponse getShiftsByOutletAndStaffStatus(Long outletId, Long staffId) {
     LocalDate today = LocalDate.now();
@@ -130,5 +135,28 @@ public class WorkingShiftService {
     shift.setStartTime(request.getStartTime());
     shift.setEndTime(request.getEndTime());
     return workingShiftRepository.save(shift);
+  }
+
+  public List<WorkingShift> generateWorkingShifts(Long outletId) {
+    Outlet outlet = outletRepository.findById(outletId).orElseThrow(() -> new RuntimeException("Outlet not found"));
+    OutletWorkingTime workingTime = outlet.getWorkingTime();
+    if (workingTime == null) {
+      throw new RuntimeException("Working time not found");
+    }
+    LocalTime startTime = workingTime.getStartTime();
+    LocalTime endTime = workingTime.getEndTime();
+    LocalDate today = LocalDate.now();
+
+    List<WorkingShift> shifts = new ArrayList<>();
+
+    WorkingShift shift = new WorkingShift();
+    shift.setOutlet(outlet);
+    shift.setStartTime(today.atTime(startTime));
+    shift.setEndTime(today.atTime(endTime));
+    shift.setName("Ca " + today.getDayOfMonth());
+    shift.setStaffAttendances(new ArrayList<>());
+    shifts.add(shift);
+
+    return shifts;
   }
 }

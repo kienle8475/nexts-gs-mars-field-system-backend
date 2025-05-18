@@ -36,12 +36,12 @@ public class WorkingShiftController {
   }
 
   @GetMapping("/{outletId}")
-  public ResponseEntity<ApiResponse<Object>> getTodaysShiftsByOutlet(@PathVariable Long outletId) {
+  public ResponseEntity<ApiResponse<Object>> generateWorkingShifts(@PathVariable Long outletId) {
     return ResponseEntity.ok(
         ApiResponse.builder()
             .message("Shifts fetched successfully")
             .status(HttpStatus.OK.value())
-            .data(workingShiftService.getTodaysShiftsByOutlet(outletId))
+            .data(workingShiftService.generateWorkingShifts(outletId))
             .build());
   }
 

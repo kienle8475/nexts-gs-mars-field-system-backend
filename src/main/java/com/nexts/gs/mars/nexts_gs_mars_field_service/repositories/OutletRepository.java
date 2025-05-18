@@ -12,12 +12,13 @@ import com.nexts.gs.mars.nexts_gs_mars_field_service.models.Outlet;
 
 @Repository
 public interface OutletRepository extends JpaRepository<Outlet, Long> {
-  List<Outlet> findByProvinceId(Long provinceId);
+  List<Outlet> findByAdministrativeUnitId(Long administrativeUnitId);
 
   @Query("""
       SELECT new com.nexts.gs.mars.nexts_gs_mars_field_service.dto.response.OutletSimpleOptionReponse(o.id, o.name)
       FROM Outlet o
-      WHERE (:provinceId IS NULL OR o.province.id = :provinceId)
+      WHERE (:administrativeUnitId IS NULL OR o.administrativeUnit.id = :administrativeUnitId)
       """)
-  List<OutletSimpleOptionReponse> findSimpleByProvince(@Param("provinceId") Long provinceId);
+  List<OutletSimpleOptionReponse> findSimpleByAdministrativeUnit(
+      @Param("administrativeUnitId") Long administrativeUnitId);
 }

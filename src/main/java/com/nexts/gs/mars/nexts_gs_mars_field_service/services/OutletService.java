@@ -42,8 +42,8 @@ public class OutletService {
         .orElseThrow(() -> new NotFoundException("Outlet not found with id: " + id));
   }
 
-  public List<OutletSimpleOptionReponse> getOutletOptionByProvinceId(Long provinceId) {
-    return outletRepository.findSimpleByProvince(provinceId);
+  public List<OutletSimpleOptionReponse> getOutletOptionByAdministrativeUnitId(Long administrativeUnitId) {
+    return outletRepository.findSimpleByAdministrativeUnit(administrativeUnitId);
   }
 
   public Outlet createOutlet(CreateOutletRequest outletRequest) {
@@ -64,7 +64,7 @@ public class OutletService {
     outletRepository.deleteById(id);
   }
 
-  public List<Outlet> getOutletsByProvince(Long provinceId) {
-    return outletRepository.findByProvinceId(provinceId);
+  public List<Outlet> getOutletsByAdministrativeUnit(Long administrativeUnitId) {
+    return outletRepository.findByAdministrativeUnitId(administrativeUnitId);
   }
 }
